@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Record for CryptoWallet payments
 record CryptoWallet(String address, String currency) implements PaymentMethod {

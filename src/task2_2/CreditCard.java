@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Record for CreditCard payments
 record CreditCard(String cardNumber, String holder) implements PaymentMethod {

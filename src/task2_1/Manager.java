@@ -1,4 +1,4 @@
-package Task2_1;
+package task2_1;
 
 public class Manager extends Employee{
 

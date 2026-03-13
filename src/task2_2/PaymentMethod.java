@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Sealed interface with permitted records
 sealed interface PaymentMethod permits CreditCard, BankTransfer, CryptoWallet {

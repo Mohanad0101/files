@@ -1,0 +1,17 @@
+Task 2.4: Abstract Class vs. Interface
+Situation	Your choice	Justification
+All animals have a name and age, but they sound different.	Abstract Class	Stateful relationship ("is-a"): Animals share common state (name, age - fields needed) and core behavior, with specific sound as abstract method. Animals are a type of living creature with common attributes.
+Some objects (document, image, settings) can be serialized	Interface	Capability ("can-be" relationship): Serialization is an add-on capability that unrelated classes can implement. Document, Image, and Settings don't share a common "is-a" relationship - they just can be serialized.
+All vehicles have speed and fuel, but they move differently.	Abstract Class	Shared state + behavior: Vehicles share common state (speed, fuel - fields) and core functionality, with abstract move() method. Different vehicles are types of vehicles with common attributes.
+A robot, a dishwasher, and a phone all connect to Wi-Fi.	Interface	Capability ("can-do" relationship): These are completely unrelated objects (different hierarchies) that share the capability to connect to Wi-Fi. They can connect, but aren't the same type of thing.
+A circle, a square, and a triangle are all shapes with an area and a perimeter, and they all have a color.	Abstract Class	Clear hierarchy + state: All shapes share color (state) and have area/perimeter calculations. They are shapes with common attributes, making abstract class with abstract methods for area/perimeter ideal.
+The class must be able to fly, swim and drive at the same time.	Interface	Multiple inheritance needed: Java doesn't support multiple inheritance with classes. Using interfaces for Flyable, Swimmable, Drivable allows one class to implement all three capabilities simultaneously.
+Quick Reference Guide:
+
+
+Criteria	                    Abstract Class	               Interface
+State (fields)	              Can have	                      Cannot (only static final)
+Relationship	              "is-a"	                         "can-do" / "has-capability"
+Multiple inheritance	     No	                                   Yes (multiple interfaces)
+Constructors	            Yes	                                  No
+When to use               Shared code + state	Capabilities        across hierarchies

@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Class with static method using pattern matching switch
 class PaymentProcessor {

@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Demo class to test the payment system
 public class PaymentDemo {

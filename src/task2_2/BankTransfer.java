@@ -1,4 +1,4 @@
-package Task2_2;
+package task2_2;
 
 // Record for BankTransfer payments
 record BankTransfer(String bankName, String iban) implements PaymentMethod {
