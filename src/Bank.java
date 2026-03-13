@@ -1,34 +1,35 @@
-public class BankAccount {
-    private final String owner;
+public class Bank {
+    private  String owner;
     private Double balance;
-    private final String accountNumber;
+    private  String accountNumber;
     private static int totalAccounts;
     private static final String bankName;
     static{
-        bankName = "Java BankAccount";
+        bankName = "Java Bank";
         System.out.println("Банковская система инициализирована"+bankName);
 
     }
 
     {
         totalAccounts++;
+        System.out.println("**********8bank");
     }
-    BankAccount(String owner, double initialBalance) {
+    Bank(String owner, double initialBalance) {
         this.owner = owner;
         this.balance = initialBalance;
         this.accountNumber = "ACC-" + totalAccounts;
     }
     public void deposit(double amount){
         if (amount< balance){
-        System.out.println("Ошибка: сумма должна быть положительной")   ;}
+            System.out.println("Ошибка: сумма должна быть положительной")   ;}
         else{
-        balance=balance+amount;}
+            balance=balance+amount;}
     }
     public void withdraw(double amount){
         if (balance >= amount)
-        balance-= amount;
+            balance-= amount;
         else
-        System.out.println("Ошибка: недостаточно средств");
+            System.out.println("Ошибка: недостаточно средств");
     }
     public static int getTotalAccounts(){
         return totalAccounts;
@@ -41,6 +42,13 @@ public class BankAccount {
     // Напишите весь класс самостоятельно
 
     public static void main(String[] args) {
+
+        final int x = 10;
+        Runnable r = () -> System.out.println(x);
+//x = 20;  // что будет, если раскомментировать?
+        r.run();
+
+
         BankAccount a1 = new BankAccount("Алиса", 1000);
         BankAccount a2 = new BankAccount("Борис", 500);
 
