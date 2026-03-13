@@ -1,12 +1,12 @@
 public class BankAccount {
-    private String owner;
+    private final String owner;
     private Double balance;
-    private String accountNumber;
+    private final String accountNumber;
     private static int totalAccounts;
-    private static String bankName;
+    private static final String bankName;
     static{
         bankName = "Java Bank";
-        System.out.println("Банковская система инициализирована");
+        System.out.println("Банковская система инициализирована"+bankName);
 
     }
 
