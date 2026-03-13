@@ -1,3 +1,5 @@
+package Task2_1;
+
 public class Intern extends Employee{
 
     public Intern(String n, Double sal) {

@@ -16,7 +16,7 @@ public class EmployeeFixed {
     }
 
     public String getRole() {
-        return "Employee";
+        return "Task2_1.Employee";
     }
 
    public   void promote(double raise) {

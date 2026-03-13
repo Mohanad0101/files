@@ -14,7 +14,7 @@ public class Employee {
     }
 
     public String getRole() {
-        return "Employee";
+        return "Task2_1.Employee";
     }
 
     protected void promote(double raise) {

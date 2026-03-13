@@ -1,3 +1,5 @@
+package Task2_1;
+
 public abstract class Employee {
 
    // Fields: name(protected), baseSalary(protected)
