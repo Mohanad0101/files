@@ -1,0 +1,29 @@
+Today’s lab is about socket programming using Python.
+Сегодняшняя лабораторная работа посвящена программированию сокетов на Python.
+
+We’ll start with a basic client and server example.
+Мы начнём с простого примера клиента и сервера.
+
+A socket is a connection that lets two programs talk over a network.
+Сокет — это соединение, которое позволяет двум программам обмениваться данными по сети.
+
+It works at the transport layer of the TCP/IP model.
+Он работает на транспортном уровне модели TCP/IP.
+
+Each socket has an IP address and a port number.
+Каждый сокет имеет IP-адрес и номер порта.
+
+Most network apps, like web, email, and FTP, use the client–server model.
+Большинство сетевых приложений, таких как веб, электронная почта и FTP, используют модель клиент–сервер.
+
+Some use a peer-to-peer model, but today we’ll focus on client–server.
+Некоторые используют модель “равный с равным” (peer‑to‑peer), но сегодня мы сосредоточимся на клиент–серверной модели.
+
+We’ll study TCP and UDP sockets and see how they work in Python.
+Мы изучим сокеты TCP и UDP и посмотрим, как они работают в Python.
+
+Our first program will handle one client at a time.
+Наша первая программа будет работать только с одним клиентом одновременно.
+
+Later, we’ll improve it to handle many clients.
+Позже мы улучшим её, чтобы она могла обслуживать многих клиентов сразу
