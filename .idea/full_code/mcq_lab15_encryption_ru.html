@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Контроль: криптография и защита данных (лаб. 15)</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e8eef4;
+      --muted: #8b9cb3;
+      --accent: #3d8fd1;
+      --ok: #2d6a4f;
+      --ok-bright: #40916c;
+      --bad: #9b2226;
+      --bad-bright: #c1121f;
+      --border: #2d3a4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .deck {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 5rem;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 0.35rem; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin: 0; }
+    .slide {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.35rem;
+      min-height: 14rem;
+    }
+    .slide.active { display: block; animation: fade 0.25s ease; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .slide-num { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem; }
+    .q-text { font-size: 1.05rem; margin: 0 0 1.1rem; }
+    .choices { display: flex; flex-direction: column; gap: 0.5rem; }
+    .choice {
+      text-align: left;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .choice:hover:not(:disabled) { border-color: var(--accent); }
+    .choice:disabled { cursor: default; }
+    .choice.correct {
+      background: var(--ok);
+      border-color: var(--ok-bright);
+    }
+    .choice.wrong {
+      background: var(--bad);
+      border-color: var(--bad-bright);
+    }
+    .feedback { margin-top: 1rem; font-size: 0.88rem; color: var(--muted); min-height: 1.5em; }
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.75rem 1rem;
+      background: rgba(15,20,25,0.95);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .nav button {
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .nav button:hover:not(:disabled) { border-color: var(--accent); }
+    .nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .progress-wrap { flex: 1; min-width: 120px; max-width: 280px; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); transition: width 0.2s; }
+    .score-pill { font-size: 0.85rem; color: var(--muted); }
+    .sources { font-size: 0.85rem; color: var(--muted); }
+    .sources a { color: var(--accent); }
+    .results-big { font-size: 2rem; font-weight: 600; color: var(--ok-bright); margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header>
+      <h1>Контрольные вопросы: криптография и защита данных</h1>
+      <p class="subtitle">Лабораторная работа №15 — согласование ключей (Диффи–Хеллман), симметрия/асимметрия, угрозы и ограничения учебных схем. Выберите один верный ответ.</p>
+    </header>
+
+    <div id="slides"></div>
+  </div>
+
+  <div class="nav">
+    <button type="button" id="btn-prev" aria-label="Предыдущий слайд">← Назад</button>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <span class="score-pill" id="score-live">Отвечено верно: 0 / 0</span>
+    <button type="button" id="btn-next" aria-label="Следующий слайд">Вперёд →</button>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      {
+        q: "В симметричном шифровании ключ шифрования и ключ дешифрования в типичной постановке:",
+        choices: [
+          "совпадают (один общий секретный ключ)",
+          "всегда различны (открытый и закрытый)",
+          "известны только серверу",
+          "генерируются только из открытого текста"
+        ],
+        correct: 0,
+        note: "Симметрия: одна секретная величина для обеих операций; проблема — безопасная доставка ключа."
+      },
+      {
+        q: "Протокол Диффи–Хеллмана в классической формулировке в первую очередь решает задачу:",
+        choices: [
+          "согласования общего секрета по открытому каналу без передачи самого секрета",
+          "цифровой подписи произвольных сообщений",
+          "сжатия данных без потерь",
+          "хранения паролей в базе данных"
+        ],
+        correct: 0,
+        note: "DH — обмен ключами (key agreement), а не подпись и не хеширование паролей."
+      },
+      {
+        q: "В базовом DH параметры p (модуль) и g (основание) для обеих сторон обычно:",
+        choices: [
+          "публичны и согласованы заранее или передаются открыто",
+          "строго секретны и никогда не передаются",
+          "известны только клиенту",
+          "равны приватным экспонентам a и b"
+        ],
+        correct: 0,
+        note: "Секретность обеспечивается a и b; p и g — публичные параметры группы."
+      },
+      {
+        q: "Клиент с приватным a и полученным от сервера B вычисляет общий секрет K как:",
+        choices: [
+          "K = B^a mod p",
+          "K = g^a mod p",
+          "K = a · B mod p",
+          "K = hash(a || B)"
+        ],
+        correct: 0,
+        note: "K = g^(ab) mod p; у клиента: (g^b)^a mod p = B^a mod p."
+      },
+      {
+        q: "Сервер с приватным b и полученным A вычисляет тот же K, потому что:",
+        choices: [
+          "B^a ≡ (g^b)^a ≡ g^(ab) ≡ (g^a)^b ≡ A^b (mod p)",
+          "A и B всегда равны",
+          "a и b передаются по сети в зашифрованном виде",
+          "p обязано быть простым числом Ферма"
+        ],
+        correct: 0,
+        note: "Корректность следует из свойств модульного возведения в степень."
+      },
+      {
+        q: "Приватные значения a (клиент) и b (сервер) в учебном DH:",
+        choices: [
+          "не должны передаваться по сети; передаются только A = g^a mod p и B = g^b mod p",
+          "передаются вместе с p и g для проверки",
+          "равны публичному ключу TLS",
+          "достаточно выбрать a = b = 1 для безопасности"
+        ],
+        correct: 0,
+        note: "Утечка a или b раскрывает общий секрет при известных A, B, p, g."
+      },
+      {
+        q: "«Чистый» DH без дополнительной аутентификации сторон НЕ защищает от:",
+        choices: [
+          "активной атаки «человек посередине» (MITM) с подменой A и B",
+          "пассивного прослушивания при сохранении целостности A и B",
+          "утечки только длины сообщения",
+          "ошибок округления вещественных чисел"
+        ],
+        correct: 0,
+        note: "Пассивный противник не получает K из A и B при корректных параметрах; MITM — другая модель угрозы."
+      },
+      {
+        q: "В Python для вычисления g^a mod p устойчиво к большим степеням следует использовать:",
+        choices: [
+          "трёхаргументный pow(g, a, p)",
+          "g ** a без модуля",
+          "math.exp(a * math.log(g))",
+          "оператор // для деления"
+        ],
+        correct: 0,
+        note: "pow с третьим аргументом выполняет модульное возведение в степень эффективно."
+      },
+      {
+        q: "Использование SHA-256 от числового/байтового представления K в учебной лаборатории выполняет роль:",
+        choices: [
+          "выработки фиксированного ключевого материала (упрощённая выработка ключа из общего секрета)",
+          "симметричного шифрования с аутентификацией (AEAD)",
+          "замены протокола DH на RSA",
+          "гарантии аутентичности сторон без сертификатов"
+        ],
+        correct: 0,
+        note: "Хеш — примитив для получения псевдослучайных байт из K; это не AEAD и не аутентификация партнёров."
+      },
+      {
+        q: "Повторное использование одного и того же потока ключей (например, XOR plaintext ⊕ keystream) для разных сообщений:",
+        choices: [
+          "криптографически недопустимо: возможно восстановление информации при известных или предсказуемых открытых текстах",
+          "рекомендуется для ускорения в production",
+          "безопасно, если открытый текст короче 16 байт",
+          "эквивалентно использованию AES-GCM"
+        ],
+        correct: 0,
+        note: "Повтор keystream даёт XOR шифротекстов ≈ XOR открытых текстов (классическая ошибка потоковых шифров)."
+      },
+      {
+        q: "Учебное XOR-шифрование в лаборатории по отношению к реальным системам:",
+        choices: [
+          "не обеспечивает аутентифицированное шифрование (нет встроенной целостности/аутентичности шифротекста)",
+          "эквивалентно ChaCha20-Poly1305 по свойствам",
+          "устойчиво к подбору ключа перебором при малых p",
+          "отменяет необходимость TLS в приложениях"
+        ],
+        correct: 0,
+        note: "Для production применяют AEAD (AES-GCM, ChaCha20-Poly1305) и аутентифицированный обмен ключами."
+      },
+      {
+        q: "В TLS (современные версии) проверка сертификата сервера клиентом важна, потому что:",
+        choices: [
+          "связывает публичный ключ/параметры с идентичностью стороны и помогает против MITM при обмене ключами",
+          "заменяет необходимость согласования сессионного ключа",
+          "делает симметричное шифрование ненужным",
+          "гарантирует анонимность сервера"
+        ],
+        correct: 0,
+        note: "Сертификаты — часть аутентификации и привязки ключа к имени; сессионный ключ всё равно согласуется."
+      },
+      {
+        q: "Использование слишком малого простого p в учебном DH:",
+        choices: [
+          "делает задачу дискретного логарифма тривиальной: общий секрет может быть восстановлен пассивным наблюдателем",
+          "усиливает стойкость против квантовых компьютеров",
+          "автоматически включает аутентификацию сторон",
+          "эквивалентно использованию elliptic-curve DH с тем же размером"
+        ],
+        correct: 0,
+        note: "Стойкость DH на Z_p* связана со сложностью дискретного лога; малые p только для демонстрации."
+      },
+      {
+        q: "Асимметричная криптография в инженерной практике чаще всего применяется для:",
+        choices: [
+          "подписи, обмена ключами и шифрования небольших объёмов; массовое шифрование данных — симметричными алгоритмами",
+          "шифрования видеопотоков без симметричного ключа",
+          "замены всех симметричных шифров во всех протоколах",
+          "сжатия больших файлов перед передачей"
+        ],
+        correct: 0,
+        note: "Гибридная криптография: асимметрия для ключей/подписи, симметрия для bulk data."
+      },
+      {
+        q: "Конфиденциальность (невозможность прочитать содержимое без ключа) без целостности шифротекста означает, что:",
+        choices: [
+          "активный противник теоретически может менять шифротекст; примитив без MAC/AEAD не гарантирует неизменность данных",
+          "данные защищены от любых изменений автоматически",
+          "MITM невозможен даже без сертификатов",
+          "достаточно DH для всех свойств безопасности"
+        ],
+        correct: 0,
+        note: "Confidentiality ≠ integrity; нужны либо AEAD, либо отдельный MAC в правильной конструкции."
+      },
+      {
+        q: "Многопоточный сервер (отдельный поток на TCP-соединение) для лабораторного DH-клиента означает:",
+        choices: [
+          "у каждого клиента свой контекст: свой сокет, свои секреты и свой K; глобально разделять b или K между клиентами нельзя",
+          "все клиенты обязаны использовать один общий K",
+          "протокол DH выполняется один раз на всех",
+          "потоки устраняют необходимость listen()"
+        ],
+        correct: 0,
+        note: "Изоляция состояния по соединению — обязательное условие корректности."
+      },
+      {
+        q: "Передача нескольких JSON-объектов подряд по одному TCP-потоку без разделителей (только recv большим блоком) часто приводит к:",
+        choices: [
+          "склеиванию буфера: два JSON в одном чтении усложняют разбор; формат «одна строка JSON + перевод строки» задаёт границы кадра",
+          "автоматическому шифрованию транспортного уровня",
+          "увеличению размера простого числа p",
+          "отказу ядра ОС от приёма данных"
+        ],
+        correct: 0,
+        note: "Нужна фраминговая дисциплина (длина, разделитель, или TLS records)."
+      },
+      {
+        q: "Эфемерные ключи в ECDHE в контексте TLS типично способствуют:",
+        choices: [
+          "совершенной прямой секретности (компрометация долгосрочного ключа не раскрывает прошлые сессии)",
+          "отказу от симметричного шифрования записи",
+          "использованию одного сеансового ключа для всех пользователей сервера",
+          "удалению сертификатов из рукопожатия"
+        ],
+        correct: 0,
+        note: "Forward secrecy достигается эфемерными параметрами обмена; долгосрочный ключ — для аутентификации."
+      },
+      {
+        q: "Атака повторного воспроизведения (replay) и MITM в смысле модели угроз:",
+        choices: [
+          "различаются: replay — повтор старых сообщений; MITM — активная подмена/перехват канала между сторонами",
+          "это одно и то же понятие",
+          "возможны только при симметричном шифровании",
+          "устраняются использованием только XOR"
+        ],
+        correct: 0,
+        note: "Разные механизмы защиты: nonce/временные метки/счётчики против replay; аутентификация и канал — против MITM."
+      },
+      {
+        q: "Для практического применения вместо учебной схемы «DH + хеш + XOR» рекомендуется:",
+        choices: [
+          "стандартизованные протоколы (например, TLS) с аутентификацией и AEAD-шифрами записи",
+          "только увеличение размера ключа XOR до 512 бит без остальных мер",
+          "отказ от любого согласования ключей",
+          "передача общего секрета K в открытом виде после DH"
+        ],
+        correct: 0,
+        note: "Production: TLS, проверка цепочки сертификатов, современные шифронаборы и KDF в стандарте."
+      }
+    ];
+
+    const slidesEl = document.getElementById("slides");
+    const btnPrev = document.getElementById("btn-prev");
+    const btnNext = document.getElementById("btn-next");
+    const progressFill = document.getElementById("progress-fill");
+    const scoreLive = document.getElementById("score-live");
+
+    let current = 0;
+    const totalSlides = QUESTIONS.length + 2;
+    const answers = QUESTIONS.map(() => ({ chosen: null, correct: null }));
+
+    function buildSlides() {
+      const intro = document.createElement("div");
+      intro.className = "slide active";
+      intro.dataset.slide = "0";
+      intro.innerHTML = `
+        <div class="slide-num">Введение</div>
+        <p class="q-text">Слайд-дек из <strong>${QUESTIONS.length}</strong> вопросов с одним верным ответом. После выбора варианта верный ответ подсвечивается <strong style="color:var(--ok-bright)">зелёным</strong>, неверный выбор — <strong style="color:var(--bad-bright)">красным</strong>. Баллы суммируются только за первый выбор по каждому вопросу.</p>
+        <p class="sources">Основа: лаб. №15 «асимметричное шифрование и DH», материалы репозитория; идея задания: <a href="https://github.com/fa-python-network/8_Assymmetric_ciphers" target="_blank" rel="noopener">fa-python-network/8_Assymmetric_ciphers</a>.</p>
+      `;
+      slidesEl.appendChild(intro);
+
+      QUESTIONS.forEach((item, i) => {
+        const slide = document.createElement("div");
+        slide.className = "slide";
+        slide.dataset.slide = String(i + 1);
+        const letters = ["А", "Б", "В", "Г"];
+        const buttons = item.choices.map((c, j) =>
+          `<button type="button" class="choice" data-index="${j}"><strong>${letters[j]}.</strong> ${escapeHtml(c)}</button>`
+        ).join("");
+        slide.innerHTML = `
+          <div class="slide-num">Вопрос ${i + 1} из ${QUESTIONS.length}</div>
+          <p class="q-text">${escapeHtml(item.q)}</p>
+          <div class="choices">${buttons}</div>
+          <p class="feedback" id="fb-${i}"></p>
+        `;
+        slidesEl.appendChild(slide);
+      });
+
+      const outro = document.createElement("div");
+      outro.className = "slide";
+      outro.dataset.slide = String(QUESTIONS.length + 1);
+      outro.innerHTML = `
+        <div class="slide-num">Итог</div>
+        <p class="q-text">Результат проверки:</p>
+        <p class="results-big" id="final-score">—</p>
+        <p class="subtitle" id="final-percent"></p>
+        <p class="sources">Пересмотрите вопросы со слайдов и пояснения под ответами. Для углубления см. README и методичку в каталоге <code>assymetric_encryption/</code>.</p>
+      `;
+      slidesEl.appendChild(outro);
+
+      QUESTIONS.forEach((_, i) => {
+        const slide = slidesEl.querySelector(`[data-slide="${i + 1}"]`);
+        slide.querySelectorAll(".choice").forEach((btn) => {
+          btn.addEventListener("click", () => onChoice(i, parseInt(btn.dataset.index, 10)));
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function onChoice(qIndex, choiceIndex) {
+      const rec = answers[qIndex];
+      if (rec.chosen !== null) return;
+
+      rec.chosen = choiceIndex;
+      const item = QUESTIONS[qIndex];
+      rec.correct = choiceIndex === item.correct;
+
+      const slide = slidesEl.querySelector(`[data-slide="${qIndex + 1}"]`);
+      const buttons = slide.querySelectorAll(".choice");
+      const fb = slide.querySelector(`#fb-${qIndex}`);
+
+      buttons.forEach((btn, j) => {
+        btn.disabled = true;
+        if (j === item.correct) btn.classList.add("correct");
+        else if (j === choiceIndex && j !== item.correct) btn.classList.add("wrong");
+      });
+      fb.textContent = item.note;
+      updateScoreDisplay();
+    }
+
+    function countScore() {
+      let firstHit = 0;
+      answers.forEach((a) => {
+        if (a.correct === true) firstHit++;
+      });
+      return firstHit;
+    }
+
+    function updateScoreDisplay() {
+      const answered = answers.filter((a) => a.chosen !== null).length;
+      const correct = countScore();
+      scoreLive.textContent = `Верно (первый выбор): ${correct} / ${QUESTIONS.length} · отвечено: ${answered}`;
+    }
+
+    function showSlide(n) {
+      current = Math.max(0, Math.min(n, totalSlides - 1));
+      slidesEl.querySelectorAll(".slide").forEach((s, i) => {
+        s.classList.toggle("active", i === current);
+      });
+      progressFill.style.width = `${((current + 1) / totalSlides) * 100}%`;
+      btnPrev.disabled = current === 0;
+      btnNext.disabled = current === totalSlides - 1;
+
+      if (current === totalSlides - 1) {
+        const correct = countScore();
+        document.getElementById("final-score").textContent =
+          `${correct} из ${QUESTIONS.length} верно`;
+        const pct = Math.round((correct / QUESTIONS.length) * 100);
+        document.getElementById("final-percent").textContent =
+          `Процент: ${pct}%. Оценка носит учебный характер; закрепите темы по пояснениям к ответам.`;
+      }
+    }
+
+    buildSlides();
+    updateScoreDisplay();
+    showSlide(0);
+
+    btnPrev.addEventListener("click", () => showSlide(current - 1));
+    btnNext.addEventListener("click", () => showSlide(current + 1));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") showSlide(current - 1);
+      if (e.key === "ArrowRight") showSlide(current + 1);
+    });
+  </script>
+</body>
+</html>
