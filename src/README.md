@@ -2174,8 +2174,6 @@ graph LR
     style Py fill:#3776AB,stroke:#2d5f8a,color:#fff
 ```
 
-
-
 ---
 *Linux Mint 22 • Oracle VirtualBox 7.x • Nginx 1.24+ • Python 3.10+*  
 *Модуль 04 интегрирован из репозитория: [github.com/fa-python-network/6_Web_server](https://github.com/fa-python-network/6_Web_server)*  
